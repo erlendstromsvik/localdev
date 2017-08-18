@@ -99,6 +99,36 @@ then
   rm "$FILE"
 fi
 
+WEB_FOLDER="/var/www"
+if ! [ -d "$WEB_FOLDER" ]
+then
+  sudo mkdir "$WEB_FOLDER"
+  sudo chown "$PHP_USER" "$WEB_FOLDER"
+  sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
+fi
+
+WEB_FOLDER="/var/www/html"
+if ! [ -d "$WEB_FOLDER" ]
+then
+  sudo mkdir "$WEB_FOLDER"
+  sudo chown "$PHP_USER" "$WEB_FOLDER"
+  sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
+fi
+
+WEB_FOLDER="/var/www/html/local"
+if ! [ -d "$WEB_FOLDER" ]
+then
+  sudo mkdir "$WEB_FOLDER"
+  sudo chown "$PHP_USER" "$WEB_FOLDER"
+  sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
+fi
+
+echo "Creating test index.php"
+cat > "${WEB_FOLDER}/index.php" << 'EOF'
+<?php
+phpinfo();
+EOF
+
 echo "Creating new nginx.conf"
 cat > "$FILE" <<'EOF'
 worker_processes auto;
@@ -121,28 +151,24 @@ EOF
 
 echo "Creating php-fpm.conf"
 cat > $(brew --prefix)/etc/nginx/php-fpm.conf <<'EOF'
-location ~ \.php$ {
-    #try_files      $uri /index.html index.php;
-    fastcgi_pass   127.0.0.1:9000;
-    #fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+fastcgi_pass   127.0.0.1:9000;
+#fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
 
-    # regex to split $uri to $fastcgi_script_name and $fastcgi_path
-    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+# regex to split $uri to $fastcgi_script_name and $fastcgi_path
+fastcgi_split_path_info ^(.+\.php)(/.+)$;
 
-    # Check that the PHP script exists before passing it
-    try_files $fastcgi_script_name =404;
+# Check that the PHP script exists before passing it
+try_files $fastcgi_script_name =404;
 
-    # Bypass the fact that try_files resets $fastcgi_path_info. See: http://trac.nginx.org/nginx/ticket/321
-    set $path_info $fastcgi_path_info;
-    fastcgi_param PATH_INFO $path_info;
-    fastcgi_index index.php;
-
-    include fastcgi.conf;
-}
+# Bypass the fact that try_files resets $fastcgi_path_info. See: http://trac.nginx.org/nginx/ticket/321
+set $path_info $fastcgi_path_info;
+fastcgi_param PATH_INFO $path_info;
+fastcgi_index index.php;
+include fastcgi.conf;
 EOF
 
 echo "Creating drupal.conf"
-cat > $(brew --prefix)/etc/nginx/conf.d/drupal.conf <<'EOF'
+cat > $(brew --prefix)/etc/nginx/drupal.conf <<'EOF'
 # Drupal include, adapted from https://raw.github.com/perusio/drupal-with-nginx
 index index.php;
 
@@ -192,7 +218,7 @@ location / {
 
     # Google verification code.
     location ~ ^/google.*\.html$ {
-	    try_files $uri @rewrite;
+      try_files $uri @rewrite;
     }
 
     ## All static files will be served directly.
@@ -232,13 +258,11 @@ location / {
 
 location = /sites/all/libraries/ckfinder/core/connector/php/connector.php {
     include php-fpm.conf;
-    fastcgi_pass $php_upstream;
 }
 
 location = /index.php {
     include php-fpm.conf;
     ## This enables a fallback for whenever the 'default' upstream fails.
-    fastcgi_pass $php_upstream;
 }
 
 location @rewrite {
@@ -294,34 +318,34 @@ echo "Creating default.conf for nginx"
 cat > $(brew --prefix)/etc/nginx/sites-available/default.conf <<'EOF'
 server {
   listen 80 default_server;
-	index index.php;
-	set $basepath "/var/www";
+  index index.php;
+  set $basepath "/var/www/html";
 
-	set $domain $host;
+  set $domain $host;
 
-	# check one name domain for simple application
-	if ($domain ~ "^(.[^.]*)\.dev$") {
-		set $domain $1;
-		set $rootpath "${domain}";
-		set $servername "${domain}.dev";
-	}
+  # check one name domain for simple application
+  if ($domain ~ "^(.[^.]*)\.dev$") {
+    set $domain $1;
+    set $rootpath "${domain}";
+    set $servername "${domain}.dev";
+  }
 
-	# check multi name domain to multi application
-	if ($domain ~ "^(.*)\.(.[^.]*)\.dev$") {
-		set $subdomain $1;
-		set $domain $2;
-		set $rootpath "${domain}/${subdomain}/www/";
-		set $servername "${subdomain}.${domain}.dev";
-	}
+  # check multi name domain to multi application
+  if ($domain ~ "^(.*)\.(.[^.]*)\.dev$") {
+    set $subdomain $1;
+    set $domain $2;
+    set $rootpath "${domain}/${subdomain}/www/";
+    set $servername "${subdomain}.${domain}.dev";
+  }
 
-	server_name $servername;
+  server_name $servername;
 
-	access_log "/usr/local/var/log/nginx/${servername}.access.log";
-	error_log "/usr/local/var/log/nginx/dev.error.log";
+  access_log "/usr/local/var/log/nginx/${servername}.access.log";
+  error_log "/usr/local/var/log/nginx/dev.error.log";
 
-	root $basepath/$rootpath;
+  root $basepath/$rootpath;
 
-  include snippets/drupal.conf;
+  include drupal.conf;
 }
 EOF
 
@@ -330,3 +354,9 @@ if ! [ -f "$FILE" ]
 then
   ln -s $(brew --prefix)/etc/nginx/sites-available/default.conf  "$FILE"
 fi
+
+echo "Restarting services ..."
+brew services restart php71
+brew services restart nginx
+brew services restart dnsmasq
+sudo brew services restart mysql
