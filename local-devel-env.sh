@@ -12,25 +12,42 @@
 # brew services restart nginx
 # brew services restart dnsmasq
 
+DEFAULT_USER=$USER
+DEFAULT_GROUP='staff'
+
+echo "*** Enter your password for sudo ***"
+sudo chgrp "$DEFAULT_GROUP" /usr/local
+sudo chmod g+w /usr/local
+
+if ! [ -d /usr/local/bin  ]
+then
+  mkdir "/usr/local/bin"
+fi
+
 echo "Installing composer..."
 curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 PROFILE_INCLUDE='alias composer="php /usr/local/bin/composer.phar"'
-if grep -Fxq 'alias composer=' ~/.bash_profile 
+FILE="/Users/$DEFAULT_USER/.bash_profile"
+if ! [ -f  ]
 then
-  sed -i '' 's/alias composer=/'"${PROFILE_INCLUDE}"'/' ~/.bash_profile 
+  touch "$FILE"
+fi
+if grep -Fxq 'alias composer=' "$FILE"
+then
+  sed -i '' 's/alias composer=/'"${PROFILE_INCLUDE}"'/' "$FILE"
 else
-  echo "$PROFILE_INCLUDE" >> ~/.bash_profile 
+  echo "$PROFILE_INCLUDE" >> "$FILE"
 fi
 
 echo "Installing drush..."
 composer global require drush/drush:8
 PROFILE_INCLUDE='export PATH="$HOME/.composer/vendor/bin:$PATH"'
-if ! grep -Fxq "$PROFILE_INCLUDE" ~/.bash_profile 
+if ! grep -Fxq "$PROFILE_INCLUDE" "$FILE"
 then
-  echo "$PROFILE_INCLUDE" >> ~/.bash_profile 
+  echo "$PROFILE_INCLUDE" >> "$FILE"
 fi
 
-source ~/.bash_profile
+source "$FILE"
 
 echo "Installing Homebrew..."
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -64,9 +81,9 @@ port=35353
 EOF
 
 echo "*** Enter your password for sudo ***"
-if ! [ -d "$file" ]
+if ! [ -d "/etc/resolver" ]
 then
-  sudo mkdir -v /etc/resolver
+  sudo mkdir -v "/etc/resolver"
 fi
 echo "nameserver 127.0.0.1" | sudo tee /etc/resolver/dev
 echo "port 35353" | sudo tee -a /etc/resolver/dev
@@ -76,11 +93,9 @@ brew tap homebrew/dupes && \
 brew tap homebrew/php && \
 brew install php71
 echo "*********************************************"
-DEFAULT_USER=$USER
 read -p "Input the user php will run as or press enter for current user [$DEFAULT_USER]: " PHP_USER
 PHP_USER="${PHP_USER:-$DEFAULT_USER}"
 sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
-DEFAULT_GROUP='staff'
 read -p "Input the group php will run as or press enter for standard group [$DEFAULT_GROUP]: " PHP_GROUP
 PHP_GROUP="${PHP_GROUP:-$DEFAULT_GROUP}"
 sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
@@ -98,6 +113,26 @@ if [ -f "$FILE" ]
 then
   rm "$FILE"
 fi
+
+echo "Creating new nginx.conf"
+cat > "$FILE" <<'EOF'
+worker_processes auto;
+events {
+  worker_connections  1024;
+}
+http {
+  include             mime.types;
+  default_type        application/octet-stream;
+  log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+  access_log /usr/local/var/log/nginx/access.log;
+  error_log /usr/local/var/log/nginx/error.log;
+  keepalive_timeout   65;
+  index index.html index.php;
+  include /usr/local/etc/nginx/sites-enabled/*;
+}
+EOF
 
 WEB_FOLDER="/var/www"
 if ! [ -d "$WEB_FOLDER" ]
@@ -127,26 +162,6 @@ echo "Creating test index.php"
 cat > "${WEB_FOLDER}/index.php" << 'EOF'
 <?php
 phpinfo();
-EOF
-
-echo "Creating new nginx.conf"
-cat > "$FILE" <<'EOF'
-worker_processes auto;
-events {
-  worker_connections  1024;
-}
-http {
-  include             mime.types;
-  default_type        application/octet-stream;
-  log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                    '$status $body_bytes_sent "$http_referer" '
-                    '"$http_user_agent" "$http_x_forwarded_for"';
-  access_log /usr/local/var/log/nginx/access.log;
-  error_log /usr/local/var/log/nginx/error.log;
-  keepalive_timeout   65;
-  index index.html index.php;
-  include /usr/local/etc/nginx/sites-enabled/*;
-}
 EOF
 
 echo "Creating php-fpm.conf"
@@ -357,6 +372,6 @@ fi
 
 echo "Restarting services ..."
 brew services restart php71
-brew services restart nginx
+sudo brew services restart nginx
 brew services restart dnsmasq
-sudo brew services restart mysql
+brew services restart mysql
