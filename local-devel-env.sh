@@ -158,6 +158,14 @@ then
   sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
 fi
 
+WEB_FOLDER="/var/www/html/local/drupal"
+if ! [ -d "$WEB_FOLDER" ]
+then
+  sudo mkdir "$WEB_FOLDER"
+  sudo chown "$PHP_USER" "$WEB_FOLDER"
+  sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
+fi
+
 echo "Creating test index.php"
 cat > "${WEB_FOLDER}/index.php" << 'EOF'
 <?php
@@ -341,17 +349,17 @@ server {
   # check one name domain for simple application
   if ($domain ~ "^(.[^.]*)\.dev$") {
     set $domain $1;
-    set $rootpath "${domain}";
+    set $rootpath "${domain}/drupal";
     set $servername "${domain}.dev";
   }
 
   # check multi name domain to multi application
-  if ($domain ~ "^(.*)\.(.[^.]*)\.dev$") {
-    set $subdomain $1;
-    set $domain $2;
-    set $rootpath "${domain}/${subdomain}/www/";
-    set $servername "${subdomain}.${domain}.dev";
-  }
+  #if ($domain ~ "^(.*)\.(.[^.]*)\.dev$") {
+  #  set $subdomain $1;
+  #  set $domain $2;
+  #  set $rootpath "${domain}/${subdomain}/www/";
+  #  set $servername "${subdomain}.${domain}.dev";
+  #}
 
   server_name $servername;
 
