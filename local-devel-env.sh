@@ -14,6 +14,15 @@
 
 DEFAULT_USER=$USER
 DEFAULT_GROUP='staff'
+DEFAULT_FOLDER="Users/$DEFAULT_USER/sites"
+
+echo "*********************************************"
+read -p "Input the user php will run as or press enter for current user [$DEFAULT_USER]: " PHP_USER
+PHP_USER="${PHP_USER:-$DEFAULT_USER}"
+read -p "Input the group php will run as or press enter for standard group [$DEFAULT_GROUP]: " PHP_GROUP
+PHP_GROUP="${PHP_GROUP:-$DEFAULT_GROUP}"
+read -p "Input the folder which will be web root or press enter for suggested folder [$DEFAULT_FOLDER]: " WEB_FOLDER
+WEB_FOLDER="${WEB_FOLDER:-$DEFAULT_FOLDER}"
 
 echo "*** Enter your password for sudo ***"
 sudo chgrp "$DEFAULT_GROUP" /usr/local
@@ -92,12 +101,7 @@ echo "Install PHP..."
 brew tap homebrew/dupes && \
 brew tap homebrew/php && \
 brew install php71
-echo "*********************************************"
-read -p "Input the user php will run as or press enter for current user [$DEFAULT_USER]: " PHP_USER
-PHP_USER="${PHP_USER:-$DEFAULT_USER}"
 sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
-read -p "Input the group php will run as or press enter for standard group [$DEFAULT_GROUP]: " PHP_GROUP
-PHP_GROUP="${PHP_GROUP:-$DEFAULT_GROUP}"
 sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
 
 echo "Installing Nginx..."
@@ -134,7 +138,6 @@ http {
 }
 EOF
 
-WEB_FOLDER="/var/www"
 if ! [ -d "$WEB_FOLDER" ]
 then
   sudo mkdir "$WEB_FOLDER"
@@ -142,7 +145,7 @@ then
   sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
 fi
 
-WEB_FOLDER="/var/www/html"
+WEB_FOLDER="$WEB_FOLDER/local"
 if ! [ -d "$WEB_FOLDER" ]
 then
   sudo mkdir "$WEB_FOLDER"
@@ -150,15 +153,7 @@ then
   sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
 fi
 
-WEB_FOLDER="/var/www/html/local"
-if ! [ -d "$WEB_FOLDER" ]
-then
-  sudo mkdir "$WEB_FOLDER"
-  sudo chown "$PHP_USER" "$WEB_FOLDER"
-  sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
-fi
-
-WEB_FOLDER="/var/www/html/local/drupal"
+WEB_FOLDER="$WEB_FOLDER/local/drupal"
 if ! [ -d "$WEB_FOLDER" ]
 then
   sudo mkdir "$WEB_FOLDER"
@@ -371,6 +366,7 @@ server {
   include drupal.conf;
 }
 EOF
+sed -e '' 's/\/var\/www\/html/'"${WEB_FOLDER}"'/' $(brew --prefix)/etc/nginx/sites-available/default.conf 
 
 FILE=$(brew --prefix)/etc/nginx/sites-enabled/default.conf
 if ! [ -f "$FILE" ]
