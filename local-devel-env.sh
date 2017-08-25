@@ -14,7 +14,7 @@
 
 DEFAULT_USER=$USER
 DEFAULT_GROUP='staff'
-DEFAULT_FOLDER="Users/$DEFAULT_USER/sites"
+DEFAULT_FOLDER="/Users/$DEFAULT_USER/sites"
 
 echo "*********************************************"
 read -p "Input the user php will run as or press enter for current user [$DEFAULT_USER]: " PHP_USER
@@ -145,24 +145,24 @@ then
   sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
 fi
 
-WEB_FOLDER="$WEB_FOLDER/local"
-if ! [ -d "$WEB_FOLDER" ]
+LOCAL_FOLDER="$WEB_FOLDER/local"
+if ! [ -d "$LOCAL_FOLDER" ]
 then
-  sudo mkdir "$WEB_FOLDER"
-  sudo chown "$PHP_USER" "$WEB_FOLDER"
-  sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
+  sudo mkdir "$LOCAL_FOLDER"
+  sudo chown "$PHP_USER" "$LOCAL_FOLDER"
+  sudo chgrp "$PHP_GROUP" "$LOCAL_FOLDER"
 fi
 
-WEB_FOLDER="$WEB_FOLDER/local/drupal"
-if ! [ -d "$WEB_FOLDER" ]
+LOCAL_FOLDER="$LOCAL_FOLDER/drupal"
+if ! [ -d "$LOCAL_FOLDER" ]
 then
-  sudo mkdir "$WEB_FOLDER"
-  sudo chown "$PHP_USER" "$WEB_FOLDER"
-  sudo chgrp "$PHP_GROUP" "$WEB_FOLDER"
+  sudo mkdir "$LOCAL_FOLDER"
+  sudo chown "$PHP_USER" "$LOCAL_FOLDER"
+  sudo chgrp "$PHP_GROUP" "$LOCAL_FOLDER"
 fi
 
 echo "Creating test index.php"
-cat > "${WEB_FOLDER}/index.php" << 'EOF'
+cat > "${LOCAL_FOLDER}/index.php" << 'EOF'
 <?php
 phpinfo();
 EOF
@@ -366,7 +366,7 @@ server {
   include drupal.conf;
 }
 EOF
-sed -e '' 's/\/var\/www\/html/'"${WEB_FOLDER}"'/' $(brew --prefix)/etc/nginx/sites-available/default.conf 
+sed -i '' 's|/var/www/html|'"${WEB_FOLDER}"'|g' $(brew --prefix)/etc/nginx/sites-available/default.conf
 
 FILE=$(brew --prefix)/etc/nginx/sites-enabled/default.conf
 if ! [ -f "$FILE" ]
