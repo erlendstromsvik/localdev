@@ -104,6 +104,9 @@ brew install php71
 sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
 sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
 
+echo "Installing XDebug"
+brew install homebrew/php/php71-xdebug
+
 echo "Installing Nginx..."
 brew tap homebrew/nginx && \
 brew install nginx
