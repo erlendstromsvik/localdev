@@ -107,6 +107,20 @@ sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.1/
 echo "Installing XDebug"
 brew install homebrew/php/php71-xdebug
 
+echo "Creating ext-xdebug.ini"
+cat > $(brew --prefix)/etc/php/7.1/ext-xdebug.ini <<'EOF'
+[xdebug]
+zend_extension="/usr/local/opt/php71-xdebug/xdebug.so"
+xdebug.remote_port = 9001
+xdebug.remote_enable = 1
+xdebug.remote_connect_back = 1
+xdebug.idekey = "docker"
+xdebug.remote_log="/usr/local/var/log/xdebug.log"
+xdebug.profiler_enable_trigger = 1
+xdebug.trace_enable_trigger = 1
+xdebug.max_nesting_level = 1000
+EOF
+
 echo "Installing Nginx..."
 brew tap homebrew/nginx && \
 brew install nginx
