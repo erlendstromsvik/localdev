@@ -118,7 +118,7 @@ echo "Installing PHP-redis"
 brew install homebrew/php/php71-redis
 
 echo "Creating ext-xdebug.ini"
-cat > $(brew --prefix)/etc/php/7.1/ext-xdebug.ini <<'EOF'
+cat > $(brew --prefix)/etc/php/7.1/conf.d/ext-xdebug.ini <<'EOF'
 [xdebug]
 zend_extension="/usr/local/opt/php71-xdebug/xdebug.so"
 xdebug.remote_port = 9001
