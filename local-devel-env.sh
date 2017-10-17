@@ -301,6 +301,10 @@ location / {
 
 ########### Security measures ##########
 
+location = /_intellij_phpdebug_validator.php {
+    include php-fpm.conf;
+}
+
 location = /sites/all/libraries/ckfinder/core/connector/php/connector.php {
     include php-fpm.conf;
 }
