@@ -2,6 +2,7 @@
 
 # Setup local development Script for OSX
 # To execute: save and `chmod +x ./local-devel-env.sh` then `sudo ./local-devel-env.sh.sh`
+# Tip! Debug drush, run line 'export XDEBUG_CONFIG="idekey=PHPSTORM"'
 
 # cat $(brew --prefix)/etc/my.cnf
 # cat $(brew --prefix)/etc/dnsmasq.conf
