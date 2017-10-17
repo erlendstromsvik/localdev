@@ -107,6 +107,15 @@ sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.1/
 echo "Installing XDebug"
 brew install homebrew/php/php71-xdebug
 
+echo "Installing Redis"
+brew install ruby
+
+echo "Installing Ruby"
+brew install redis
+
+echo "Installing PHP-redis"
+brew install homebrew/php/php71-redis
+
 echo "Creating ext-xdebug.ini"
 cat > $(brew --prefix)/etc/php/7.1/ext-xdebug.ini <<'EOF'
 [xdebug]
@@ -396,3 +405,4 @@ brew services restart php71
 sudo brew services restart nginx
 brew services restart dnsmasq
 brew services restart mysql
+brew services restart redis
