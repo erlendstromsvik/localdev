@@ -33,6 +33,8 @@ if ! [ -d /usr/local/bin  ]
 then
   mkdir "/usr/local/bin"
 fi
+sudo chgrp "$DEFAULT_GROUP" /usr/local/bin
+sudo chmod g+w /usr/local/bin
 
 echo "Installing composer..."
 curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
