@@ -87,7 +87,7 @@ brew tap homebrew/services
 echo "Installing DNSMasq..."
 brew install -v dnsmasq
 cat > $(brew --prefix)/etc/dnsmasq.conf <<'EOF'
-address=/.dev/127.0.0.1
+address=/.localhost/127.0.0.1
 listen-address=127.0.0.1
 port=35353
 EOF
@@ -375,18 +375,18 @@ server {
   set $domain $host;
 
   # check one name domain for simple application
-  if ($domain ~ "^(.[^.]*)\.dev$") {
+  if ($domain ~ "^(.[^.]*)\.localhost$") {
     set $domain $1;
     set $rootpath "${domain}/drupal";
-    set $servername "${domain}.dev";
+    set $servername "${domain}.localhost";
   }
 
   # check multi name domain to multi application
-  #if ($domain ~ "^(.*)\.(.[^.]*)\.dev$") {
+  #if ($domain ~ "^(.*)\.(.[^.]*)\.localhost$") {
   #  set $subdomain $1;
   #  set $domain $2;
   #  set $rootpath "${domain}/${subdomain}/www/";
-  #  set $servername "${subdomain}.${domain}.dev";
+  #  set $servername "${subdomain}.${domain}.localhost";
   #}
 
   server_name $servername;
