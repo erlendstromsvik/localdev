@@ -38,7 +38,7 @@ sudo chmod g+w /usr/local/bin
 
 echo "Installing composer..."
 curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-PROFILE_INCLUDE='alias composer="php /usr/local/bin/composer.phar"'
+PROFILE_INCLUDE='alias composer="php /usr/local/bin/composer"'
 FILE="/Users/$DEFAULT_USER/.bash_profile"
 if ! [ -f  ]
 then
