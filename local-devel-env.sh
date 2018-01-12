@@ -97,8 +97,8 @@ if ! [ -d "/etc/resolver" ]
 then
   sudo mkdir -v "/etc/resolver"
 fi
-echo "nameserver 127.0.0.1" | sudo tee /etc/resolver/dev
-echo "port 35353" | sudo tee -a /etc/resolver/dev
+echo "nameserver 127.0.0.1" | sudo tee /etc/resolver/localhost
+echo "port 35353" | sudo tee -a /etc/resolver/localhost
 
 echo "Install PHP..."
 brew tap homebrew/dupes && \
