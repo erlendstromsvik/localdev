@@ -298,7 +298,7 @@ location / {
         return 404;
     }
 
-    try_files $uri @rewrite;
+    try_files $uri $uri/ /index.php?$query_string;
 }
 
 ########### Security measures ##########
