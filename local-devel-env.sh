@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -e
 # Setup local development Script for OSX
 # To execute: save and `chmod +x ./local-devel-env.sh` then `./local-devel-env.sh`
 # Tip! Debug drush, run line 'export XDEBUG_CONFIG="idekey=PHPSTORM"'
