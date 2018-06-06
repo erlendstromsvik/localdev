@@ -51,6 +51,10 @@ else
 fi
 
 source "$FILE"
+echo "Installing drush-launcher"
+curl -OL https://github.com/drush-ops/drush-launcher/releases/download/0.6.0/drush.phar
+chmod +x drush.phar
+sudo mv drush.phar /usr/local/bin/drush
 
 echo "Installing Homebrew..."
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
