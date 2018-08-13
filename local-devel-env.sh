@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -e
 # Setup local development Script for OSX
 # To execute: save and `chmod +x ./local-devel-env.sh` then `./local-devel-env.sh`
 # Tip! Debug drush, run line 'export XDEBUG_CONFIG="idekey=PHPSTORM"'
@@ -26,13 +26,12 @@ read -p "Input the folder which will be web root or press enter for suggested fo
 WEB_FOLDER="${WEB_FOLDER:-$DEFAULT_FOLDER}"
 
 echo "*** Enter your password for sudo ***"
-sudo chgrp "$DEFAULT_GROUP" /usr/local
-sudo chmod g+w /usr/local
+# Changed this from sudo chgrp "$DEFAULT_GROUP" /usr/local because of recent OSX changes:
+# https://github.com/Homebrew/brew/issues/3228
+sudo chgrp "$DEFAULT_GROUP" $(brew --prefix)/*
+# Same here, of course:
+sudo chmod g+w $(brew --prefix)/*
 
-if ! [ -d /usr/local/bin  ]
-then
-  mkdir "/usr/local/bin"
-fi
 sudo chgrp "$DEFAULT_GROUP" /usr/local/bin
 sudo chmod g+w /usr/local/bin
 
@@ -51,15 +50,11 @@ else
   echo "$PROFILE_INCLUDE" >> "$FILE"
 fi
 
-echo "Installing drush..."
-composer global require drush/drush:8
-PROFILE_INCLUDE='export PATH="$HOME/.composer/vendor/bin:$PATH"'
-if ! grep -Fxq "$PROFILE_INCLUDE" "$FILE"
-then
-  echo "$PROFILE_INCLUDE" >> "$FILE"
-fi
-
 source "$FILE"
+echo "Installing drush-launcher"
+curl -OL https://github.com/drush-ops/drush-launcher/releases/download/0.6.0/drush.phar
+chmod +x drush.phar
+sudo mv drush.phar /usr/local/bin/drush
 
 echo "Installing Homebrew..."
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -101,40 +96,32 @@ echo "nameserver 127.0.0.1" | sudo tee /etc/resolver/localhost
 echo "port 35353" | sudo tee -a /etc/resolver/localhost
 
 echo "Install PHP..."
-brew tap homebrew/dupes && \
-brew tap homebrew/php && \
-brew install php71
+brew install php@7.1
 sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
 sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
 
 echo "Installing XDebug"
-brew install homebrew/php/php71-xdebug
-
-echo "Installing Redis"
-brew install ruby
+#$(brew --prefix)/Cellar/php@7.1/7.1.18/bin/pecl install xdebug
 
 echo "Installing Ruby"
+brew install ruby
+
+echo "Installing Redis"
 brew install redis
 
 echo "Installing PHP-redis"
-brew install homebrew/php/php71-redis
+$(brew --prefix)/Cellar/php@7.1/7.1.18/bin/pecl install redis 
 
 echo "Creating ext-xdebug.ini"
 cat > $(brew --prefix)/etc/php/7.1/conf.d/ext-xdebug.ini <<'EOF'
 [xdebug]
-zend_extension="/usr/local/opt/php71-xdebug/xdebug.so"
+zend_extension="/usr/local//lib/php/pecl/20160303/xdebug.so"
 xdebug.remote_port = 9001
 xdebug.remote_enable = 1
-xdebug.remote_connect_back = 1
-xdebug.idekey = "docker"
-xdebug.remote_log="/usr/local/var/log/xdebug.log"
-xdebug.profiler_enable_trigger = 1
-xdebug.trace_enable_trigger = 1
 xdebug.max_nesting_level = 1000
 EOF
 
 echo "Installing Nginx..."
-brew tap homebrew/nginx && \
 brew install nginx
 mkdir -p $(brew --prefix)/etc/nginx/sites-available && \
 mkdir -p $(brew --prefix)/etc/nginx/sites-enabled && \
@@ -408,7 +395,7 @@ then
 fi
 
 echo "Restarting services ..."
-brew services restart php71
+brew services restart php@7.1
 sudo brew services restart nginx
 brew services restart dnsmasq
 brew services restart mysql
