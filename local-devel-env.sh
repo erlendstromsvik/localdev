@@ -52,13 +52,12 @@ else
 fi
 
 echo "Installing drush..."
-composer global require drush/drush:8
+composer global require drush/drush:9
 PROFILE_INCLUDE='export PATH="$HOME/.composer/vendor/bin:$PATH"'
 if ! grep -Fxq "$PROFILE_INCLUDE" "$FILE"
 then
   echo "$PROFILE_INCLUDE" >> "$FILE"
 fi
-
 source "$FILE"
 
 echo "Installing Homebrew..."
