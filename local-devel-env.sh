@@ -60,6 +60,11 @@ then
 fi
 source "$FILE"
 
+echo "Installing PEAR / PECL..."
+curl -O http://pear.php.net/go-pear.phar
+sudo php -d detect_unicode=0 go-pear.phar
+rm go-pear.phar
+
 echo "Installing Homebrew..."
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
@@ -100,14 +105,12 @@ echo "nameserver 127.0.0.1" | sudo tee /etc/resolver/localhost
 echo "port 35353" | sudo tee -a /etc/resolver/localhost
 
 echo "Install PHP..."
-brew tap homebrew/dupes && \
-brew tap homebrew/php && \
-brew install php71
-sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
-sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
+brew install php
+sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
+sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
 
 echo "Installing XDebug"
-brew install homebrew/php/php71-xdebug
+pecl install xdebug
 
 echo "Installing Redis"
 brew install ruby
@@ -116,12 +119,13 @@ echo "Installing Ruby"
 brew install redis
 
 echo "Installing PHP-redis"
-brew install homebrew/php/php71-redis
+pecl install redis
 
-echo "Creating ext-xdebug.ini"
-cat > $(brew --prefix)/etc/php/7.1/conf.d/ext-xdebug.ini <<'EOF'
+echo "Adding settings to php.ini"
+cat > $(brew --prefix)/etc/php/7.2/php.ini <<'EOF'
 [xdebug]
-zend_extension="/usr/local/opt/php71-xdebug/xdebug.so"
+extension="redis.so"
+zend_extension="xdebug.so"
 xdebug.remote_port = 9001
 xdebug.remote_enable = 1
 xdebug.remote_connect_back = 1
@@ -131,6 +135,9 @@ xdebug.profiler_enable_trigger = 1
 xdebug.trace_enable_trigger = 1
 xdebug.max_nesting_level = 1000
 EOF
+
+echo "Installing Elasticsearch..."
+brew install elasticsearch
 
 echo "Installing Nginx..."
 brew tap homebrew/nginx && \
@@ -407,8 +414,9 @@ then
 fi
 
 echo "Restarting services ..."
-brew services restart php71
+brew services restart php
 sudo brew services restart nginx
 brew services restart dnsmasq
 brew services restart mysql
 brew services restart redis
+brew services restart elasticsearch
