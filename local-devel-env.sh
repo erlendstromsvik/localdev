@@ -80,7 +80,7 @@ echo "Installing Homebrew..."
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 echo "installing   MySQL..."
-brew install -v mysql
+brew install -v mysql@5.7
 cat > $(brew --prefix)/etc/my.cnf <<'EOF'
 # Default Homebrew MySQL server config
 [mysqld]
