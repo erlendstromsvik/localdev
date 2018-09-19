@@ -61,9 +61,20 @@ fi
 source "$FILE"
 
 echo "Installing PEAR / PECL..."
+if ! [ -d /tmp/pear ]
+then
+  mkdir "/tmp/pear"
+  sudo chmod ug+w "/tmp/pear"
+fi
+if ! [ -d /tmp/pear/install ]
+then
+  mkdir "/tmp/pear/install"
+  sudo chmod ug+w "/tmp/pear/install"
+fi
 curl -O http://pear.php.net/go-pear.phar
 sudo php -d detect_unicode=0 go-pear.phar
 rm go-pear.phar
+pecl channel-update pecl.php.net
 
 echo "Installing Homebrew..."
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -136,11 +147,13 @@ xdebug.trace_enable_trigger = 1
 xdebug.max_nesting_level = 1000
 EOF
 
+echo "Installing java8..."
+brew cask install homebrew/cask-versions/java8
+
 echo "Installing Elasticsearch..."
 brew install elasticsearch
 
 echo "Installing Nginx..."
-brew tap homebrew/nginx && \
 brew install nginx
 mkdir -p $(brew --prefix)/etc/nginx/sites-available && \
 mkdir -p $(brew --prefix)/etc/nginx/sites-enabled && \
