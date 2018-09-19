@@ -26,16 +26,14 @@ read -p "Input the folder which will be web root or press enter for suggested fo
 WEB_FOLDER="${WEB_FOLDER:-$DEFAULT_FOLDER}"
 
 echo "*** Enter your password for sudo ***"
-sudo chgrp "$DEFAULT_GROUP" /usr/local
-sudo chmod g+w /usr/local
 
-if ! [ -d /usr/local/bin  ]
+if ! [ -d /usr/local/bin ]
 then
-  mkdir "/usr/local/bin"
+  sudo mkdir "/usr/local/bin"
 fi
-sudo chgrp "$DEFAULT_GROUP" /usr/local/bin
-sudo chmod g+w /usr/local/bin
-exit
+sudo chgrp -R "$DEFAULT_GROUP" /usr/local/*
+sudo chown -R "$DEFAULT_USER" /usr/local/*
+sudo chmod -R ug+w /usr/local/*
 
 echo "Install PHP..."
 brew install php
@@ -66,27 +64,6 @@ then
   echo "$PROFILE_INCLUDE" >> "$FILE"
 fi
 source "$FILE"
-
-echo "Installing PEAR / PECL..."
-if ! [ -d /private/tmp/pear ]
-then
-  mkdir "/private/tmp/pear"
-fi
-if ! [ -d /private/tmp/pear/install ]
-then
-  mkdir "/private/tmp/pear/install"
-fi
-curl -O http://pear.php.net/go-pear.phar
-php -d detect_unicode=0 go-pear.phar
-rm go-pear.phar
-pear config-set download_dir /private/tmp/pear/download
-pear config-set cache_dir /private/tmp/pear/cache
-pear config-set temp_dir /private/tmp/pear/temp
-sudo chgrp "$DEFAULT_USER" /private/tmp/pear
-sudo chgrp -R "$DEFAULT_USER" /private/tmp/pear/*
-pear update-channels
-pecl update-channels
-pecl channel-update pecl.php.net
 
 echo "Installing Homebrew..."
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
