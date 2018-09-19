@@ -120,8 +120,8 @@ pecl install redis
 echo "Adding settings to php.ini"
 cat > $(brew --prefix)/etc/php/7.2/php.ini <<'EOF'
 [xdebug]
-extension="redis.so"
-zend_extension="xdebug.so"
+extension="/usr/local/lib/php/pecl/20170718/redis.so"
+zend_extension="/usr/local/lib/php/pecl/20170718/xdebug.so"
 xdebug.remote_port = 9001
 xdebug.remote_enable = 1
 xdebug.remote_connect_back = 1
