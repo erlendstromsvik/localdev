@@ -98,6 +98,7 @@ innodb_flush_log_at_trx_commit = 0
 innodb_thread_concurrency = 32
 EOF
 brew tap homebrew/services
+brew link mysql@5.7 --force
 
 echo "Installing DNSMasq..."
 brew install -v dnsmasq
