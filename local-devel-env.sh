@@ -35,12 +35,6 @@ sudo chgrp -R "$DEFAULT_GROUP" /usr/local/*
 sudo chown -R "$DEFAULT_USER" /usr/local/*
 sudo chmod -R ug+w /usr/local/*
 
-echo "Install PHP..."
-brew install php
-sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
-sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
-brew link --overwrite php
-
 echo "Installing composer..."
 curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 PROFILE_INCLUDE='alias composer="php /usr/local/bin/composer"'
@@ -67,6 +61,12 @@ source "$FILE"
 
 echo "Installing Homebrew..."
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+echo "Install PHP..."
+brew install php
+sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
+sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
+brew link --overwrite php
 
 echo "installing   MySQL..."
 brew install -v mysql@5.7
