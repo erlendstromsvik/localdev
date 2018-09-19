@@ -430,6 +430,6 @@ echo "Restarting services ..."
 brew services restart php
 sudo brew services restart nginx
 brew services restart dnsmasq
-brew services restart mysql
+brew services restart mysql@5.7
 brew services restart redis
 brew services restart elasticsearch
