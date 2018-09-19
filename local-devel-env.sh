@@ -7,9 +7,9 @@
 # cat $(brew --prefix)/etc/my.cnf
 # cat $(brew --prefix)/etc/dnsmasq.conf
 # cat ~/.bash_profile
-# cat $(brew --prefix)/etc/php/7.1/php-fpm.d/www.conf
+# cat $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
 
-# brew services restart php71
+# brew services restart php72
 # brew services restart nginx
 # brew services restart dnsmasq
 
@@ -35,6 +35,13 @@ then
 fi
 sudo chgrp "$DEFAULT_GROUP" /usr/local/bin
 sudo chmod g+w /usr/local/bin
+exit
+
+echo "Install PHP..."
+brew install php
+sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
+sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
+brew link --overwrite php
 
 echo "Installing composer..."
 curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -53,7 +60,7 @@ fi
 
 echo "Installing drush..."
 composer global require drush/drush:9
-PROFILE_INCLUDE='export PATH="$HOME/.composer/vendor/bin:$PATH"'
+PROFILE_INCLUDE='export PATH="/usr/local/bin:/usr/local/sbin:$HOME/.composer/vendor/bin:$PATH"'
 if ! grep -Fxq "$PROFILE_INCLUDE" "$FILE"
 then
   echo "$PROFILE_INCLUDE" >> "$FILE"
@@ -61,19 +68,24 @@ fi
 source "$FILE"
 
 echo "Installing PEAR / PECL..."
-if ! [ -d /tmp/pear ]
+if ! [ -d /private/tmp/pear ]
 then
-  mkdir "/tmp/pear"
-  sudo chmod ug+w "/tmp/pear"
+  mkdir "/private/tmp/pear"
 fi
-if ! [ -d /tmp/pear/install ]
+if ! [ -d /private/tmp/pear/install ]
 then
-  mkdir "/tmp/pear/install"
-  sudo chmod ug+w "/tmp/pear/install"
+  mkdir "/private/tmp/pear/install"
 fi
 curl -O http://pear.php.net/go-pear.phar
-sudo php -d detect_unicode=0 go-pear.phar
+php -d detect_unicode=0 go-pear.phar
 rm go-pear.phar
+pear config-set download_dir /private/tmp/pear/download
+pear config-set cache_dir /private/tmp/pear/cache
+pear config-set temp_dir /private/tmp/pear/temp
+sudo chgrp "$DEFAULT_USER" /private/tmp/pear
+sudo chgrp -R "$DEFAULT_USER" /private/tmp/pear/*
+pear update-channels
+pecl update-channels
 pecl channel-update pecl.php.net
 
 echo "Installing Homebrew..."
@@ -115,11 +127,6 @@ then
 fi
 echo "nameserver 127.0.0.1" | sudo tee /etc/resolver/localhost
 echo "port 35353" | sudo tee -a /etc/resolver/localhost
-
-echo "Install PHP..."
-brew install php
-sed -i '' 's/user = .*/user = '"${PHP_USER}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
-sed -i '' 's/group = .*/group = '"${PHP_GROUP}"'/' $(brew --prefix)/etc/php/7.2/php-fpm.d/www.conf
 
 echo "Installing XDebug"
 pecl install xdebug
