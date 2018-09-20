@@ -119,6 +119,8 @@ pecl install redis
 
 echo "Adding settings to php.ini"
 cat > $(brew --prefix)/etc/php/7.2/php.ini <<'EOF'
+memory_limit = 350M
+include_path = ".:/usr/local/share/pear:/usr/local/Cellar/php/7.2.10/share/php/pear"
 [xdebug]
 extension="/usr/local/lib/php/pecl/20170718/redis.so"
 zend_extension="/usr/local/lib/php/pecl/20170718/xdebug.so"
